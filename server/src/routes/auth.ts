@@ -1,12 +1,12 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { query } from '../db.js';
+import { query } from '../db';
 
 const router = express.Router();
 
 // Register
-router.post('/register', async (req, res) => {
+router.post('/register', async (req: Request, res: Response) => {
   const { username, password } = req.body || {};
   if (!username || !password) {
     return res.status(400).json({ message: 'username & password required' });
@@ -24,7 +24,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post('/login', async (req: Request, res: Response) => {
   const { username, password } = req.body || {};
   if (!username || !password) {
     return res.status(400).json({ message: 'username & password required' });

@@ -1,0 +1,146 @@
+# Vue.js 项目标准 .gitignore 文件
+
+# ========================
+# 操作系统自动生成的文件
+# ========================
+
+# macOS 系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows 系统文件
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux 系统文件
+*~
+
+# ========================
+# 项目依赖和构建产物
+# ========================
+
+# Node.js 依赖目录
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Vue.js 构建输出
+dist/
+build/
+
+# Vite 缓存
+.cache/
+
+# ========================
+# IDE 和编辑器配置文件
+# ========================
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# WebStorm/IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ========================
+# 运行时和日志文件
+# ========================
+
+# 日志文件
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ========================
+# 敏感信息和环境配置
+# ========================
+
+# 环境变量文件（包含敏感信息）
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 密钥文件
+*.key
+*.pem
+*.cert
+*.crt
+
+# ========================
+# Vue.js 特定文件
+# ========================
+
+# Vite 特定
+.vite/
+
+# 测试相关
+/coverage/
+/.nyc_output
+
+# 本地开发服务器
+.local
+
+# ========================
+# 包管理器特定文件
+# ========================
+
+# yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ========================
+# 其他
+# ========================
+
+# 临时文件
+.tmp/
+temp/
+
+# 调试文件
+debug/
+
+# 文档生成
+/docs/
+
+# 编辑器备份文件
+*~
+*.swp
+*.swo
+
+# 操作系统文件
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows 缩略图缓存
+Thumbs.db
+ehthumbs.db
+
+# 文件夹属性文件
+Desktop.ini

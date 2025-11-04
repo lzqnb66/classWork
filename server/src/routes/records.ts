@@ -1,13 +1,13 @@
-import express from 'express';
-import { query } from '../db.js';
-import { authMiddleware } from '../middleware/auth.js';
+import express, { Request, Response, NextFunction } from 'express';
+import { query } from '../db';
+import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
 router.use(authMiddleware);
 
 // Create record
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   const { type, date, steps, sleep_hours, food_name, calories } = req.body || {};
   const allowed = ['steps', 'sleep', 'diet'];
   if (!type || !allowed.includes(type) || !date) {
@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
   try {
     const sql = `INSERT INTO records (user_id, type, date, steps, sleep_hours, food_name, calories)
                  VALUES (?, ?, ?, ?, ?, ?, ?)`;
-    await query(sql, [req.user.id, type, date, steps || null, sleep_hours || null, food_name || null, calories || null]);
+    await query(sql, [req.user!.id, type, date, steps || null, sleep_hours || null, food_name || null, calories || null]);
     return res.json({ message: 'Record created' });
   } catch (e) {
     console.error(e);
@@ -25,10 +25,10 @@ router.post('/', async (req, res) => {
 });
 
 // List records with filters
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   const { startDate, endDate, type } = req.query;
   const conditions = ['user_id = ?'];
-  const params = [req.user.id];
+  const params: any[] = [req.user!.id];
   if (type) { conditions.push('type = ?'); params.push(type); }
   if (startDate) { conditions.push('date >= ?'); params.push(startDate); }
   if (endDate) { conditions.push('date <= ?'); params.push(endDate); }
@@ -43,11 +43,11 @@ router.get('/', async (req, res) => {
 });
 
 // Update record (own record only)
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { type, date, steps, sleep_hours, food_name, calories } = req.body || {};
   try {
-    const own = await query('SELECT id FROM records WHERE id = ? AND user_id = ?', [id, req.user.id]);
+    const own = await query('SELECT id FROM records WHERE id = ? AND user_id = ?', [id, req.user!.id]);
     if (own.length === 0) return res.status(404).json({ message: 'Record not found' });
     const sql = `UPDATE records SET type = ?, date = ?, steps = ?, sleep_hours = ?, food_name = ?, calories = ? WHERE id = ?`;
     await query(sql, [type || null, date || null, steps || null, sleep_hours || null, food_name || null, calories || null, id]);
@@ -59,10 +59,10 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete record (own record only)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
-    const own = await query('SELECT id FROM records WHERE id = ? AND user_id = ?', [id, req.user.id]);
+    const own = await query('SELECT id FROM records WHERE id = ? AND user_id = ?', [id, req.user!.id]);
     if (own.length === 0) return res.status(404).json({ message: 'Record not found' });
     await query('DELETE FROM records WHERE id = ?', [id]);
     return res.json({ message: 'Record deleted' });
@@ -74,7 +74,7 @@ router.delete('/:id', async (req, res) => {
 
 // ---- Analysis Endpoints ----
 // Weekly steps trend (last 7 days including today)
-router.get('/analysis/weekly-steps', async (req, res) => {
+router.get('/analysis/weekly-steps', async (req: Request, res: Response) => {
   try {
     const rows = await query(
       `SELECT date, COALESCE(SUM(steps), 0) AS total_steps
@@ -82,7 +82,7 @@ router.get('/analysis/weekly-steps', async (req, res) => {
        WHERE user_id = ? AND type = 'steps' AND date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
        GROUP BY date
        ORDER BY date ASC`,
-      [req.user.id]
+      [req.user!.id]
     );
     // Ensure we return exactly 7 days (fill missing days)
     const result = [];
@@ -102,7 +102,7 @@ router.get('/analysis/weekly-steps', async (req, res) => {
 });
 
 // Daily calories distribution
-router.get('/analysis/daily-calories', async (req, res) => {
+router.get('/analysis/daily-calories', async (req: Request, res: Response) => {
   const { date } = req.query;
   if (!date) return res.status(400).json({ message: 'date required (YYYY-MM-DD)' });
   try {
@@ -110,7 +110,7 @@ router.get('/analysis/daily-calories', async (req, res) => {
       `SELECT id, food_name, COALESCE(calories, 0) AS calories
        FROM records WHERE user_id = ? AND type = 'diet' AND date = ?
        ORDER BY id ASC`,
-      [req.user.id, date]
+      [req.user!.id, date]
     );
     res.json(rows);
   } catch (e) {
@@ -120,7 +120,7 @@ router.get('/analysis/daily-calories', async (req, res) => {
 });
 
 // Average steps and goal check
-router.get('/analysis/steps-average', async (req, res) => {
+router.get('/analysis/steps-average', async (req: Request, res: Response) => {
   const { startDate, endDate, threshold } = req.query;
   if (!startDate || !endDate) return res.status(400).json({ message: 'startDate & endDate required' });
   const goal = Number(threshold || 10000);
@@ -128,7 +128,7 @@ router.get('/analysis/steps-average', async (req, res) => {
     const rows = await query(
       `SELECT AVG(steps) AS avg_steps FROM records
        WHERE user_id = ? AND type = 'steps' AND date BETWEEN ? AND ?`,
-      [req.user.id, startDate, endDate]
+      [req.user!.id, startDate, endDate]
     );
     const avg = rows[0]?.avg_steps ? Number(rows[0].avg_steps) : 0;
     res.json({ average_steps: avg, threshold: goal, meet_goal: avg >= goal });

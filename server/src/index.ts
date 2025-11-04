@@ -1,11 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import "reflect-metadata";
 dotenv.config();
 
-import authRoutes from './routes/auth.js';
-import recordsRoutes from './routes/records.js';
-import adminRoutes from './routes/admin.js';
+import authRoutes from './routes/auth';
+import recordsRoutes from './routes/records';
+import adminRoutes from './routes/admin';
+import { testConnection } from './data-source.js';
 
 const app = express();
 
@@ -28,12 +30,26 @@ app.use('/api/records', recordsRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Global error handler (simple)
-app.use((err, req, res, next) => {
+app.use((err: Error | any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({ message: err.message || 'Server Error' });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
-});
+
+// 启动服务器并初始化数据库
+async function startServer() {
+  try {
+    // 测试数据库连接并自动同步表结构
+    await testConnection();
+    
+    app.listen(PORT, () => {
+      console.log(`✅ Server listening on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ 服务器启动失败:', error);
+    process.exit(1);
+  }
+}
+
+startServer();

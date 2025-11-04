@@ -1,7 +1,7 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 dotenv.config();
-
+console.log(process.env.DB_PASSWORD)
 // MySQL connection pool
 export const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
@@ -14,7 +14,7 @@ export const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-export async function query(sql, params = []) {
+export async function query(sql: string, params: any[] = []): Promise<any[]> {
   const [rows] = await pool.execute(sql, params);
-  return rows;
+  return rows as any[];
 }
