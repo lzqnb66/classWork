@@ -55,7 +55,7 @@ app.use((err: Error | any, req: express.Request, res: express.Response, next: ex
   res.status(err.status || 500).json({ message: err.message || 'Server Error' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3789;
 
 // 启动服务器并初始化数据库
 async function startServer() {

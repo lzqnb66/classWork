@@ -88,12 +88,12 @@ DB_USER=root
 DB_PASSWORD=your_password
 DB_NAME=health_app
 JWT_SECRET=your_jwt_secret
-PORT=3000
+PORT=3789
 ```
 
 ### admin-app/.env 和 mobile-app/.env
 ```env
-VITE_API_BASE_URL=http://localhost:3000/api
+VITE_API_BASE_URL=http://localhost:3789/api
 ```
 
 ## 🗂️ Git 管理策略
