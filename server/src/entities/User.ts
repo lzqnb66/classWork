@@ -16,7 +16,8 @@ export class User {
     @Column({
         type: "varchar",
         length: 255,
-        nullable: false
+        nullable: false,
+        name: "password_hash"
     })
     password!: string;
 

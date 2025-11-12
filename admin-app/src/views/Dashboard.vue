@@ -2,6 +2,55 @@
   <div style="padding:16px;">
     <el-page-header content="健康管理后台" />
 
+    <!-- 数据统计卡片 -->
+    <el-row :gutter="16" style="margin-top:12px;">
+      <el-col :span="6">
+        <el-card shadow="hover">
+          <div style="display:flex;align-items:center;">
+            <el-icon size="32" color="#409EFF"><User /></el-icon>
+            <div style="margin-left:12px;">
+              <div style="font-size:14px;color:#909399;">总用户数</div>
+              <div style="font-size:24px;font-weight:bold;">{{ stats.totalUsers }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card shadow="hover">
+          <div style="display:flex;align-items:center;">
+            <el-icon size="32" color="#67C23A"><TrendCharts /></el-icon>
+            <div style="margin-left:12px;">
+              <div style="font-size:14px;color:#909399;">总记录数</div>
+              <div style="font-size:24px;font-weight:bold;">{{ stats.totalRecords }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card shadow="hover">
+          <div style="display:flex;align-items:center;">
+            <el-icon size="32" color="#E6A23C"><Calendar /></el-icon>
+            <div style="margin-left:12px;">
+              <div style="font-size:14px;color:#909399;">今日新增</div>
+              <div style="font-size:24px;font-weight:bold;">{{ stats.todayRecords }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card shadow="hover">
+          <div style="display:flex;align-items:center;">
+            <el-icon size="32" color="#F56C6C"><DataAnalysis /></el-icon>
+            <div style="margin-left:12px;">
+              <div style="font-size:14px;color:#909399;">活跃用户</div>
+              <div style="font-size:24px;font-weight:bold;">{{ stats.activeUsers }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 数据筛选 -->
     <el-card style="margin-top:12px;">
       <template #header>数据筛选</template>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -18,6 +67,23 @@
       </div>
     </el-card>
 
+    <!-- 趋势图表 -->
+    <el-row :gutter="16" style="margin-top:12px;">
+      <el-col :span="12">
+        <el-card>
+          <template #header>步数趋势</template>
+          <div ref="stepsChart" style="height:300px;"></div>
+        </el-card>
+      </el-col>
+      <el-col :span="12">
+        <el-card>
+          <template #header>睡眠时长趋势</template>
+          <div ref="sleepChart" style="height:300px;"></div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 记录列表 -->
     <el-card style="margin-top:12px;">
       <template #header>记录列表</template>
       <el-table :data="records" style="width: 100%" size="small">
@@ -37,6 +103,7 @@
       </el-table>
     </el-card>
 
+    <!-- 用户列表 -->
     <el-card style="margin-top:12px;">
       <template #header>用户列表</template>
       <el-table :data="users" style="width: 100%" size="small">
@@ -54,26 +121,81 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { useAuthStore } from '../store/auth';
+import { User, TrendCharts, Calendar, DataAnalysis } from '@element-plus/icons-vue';
+import { useAuthStore } from '../store/store.js';
+import { usersAPI } from '../api/modules/users';
+import { recordsAPI } from '../api/modules/records';
+import { dashboardAPI } from '../api/modules/dashboard';
+import * as echarts from 'echarts';
 
 const auth = useAuthStore();
 const filters = ref({ userId: '', type: '', startDate: '', endDate: '' });
 const records = ref([]);
 const users = ref([]);
+const stats = ref({
+  totalUsers: 0,
+  totalRecords: 0,
+  todayRecords: 0,
+  activeUsers: 0
+});
+
+const stepsChart = ref(null);
+const sleepChart = ref(null);
+let stepsChartInstance = null;
+let sleepChartInstance = null;
+
+async function loadStats() {
+  try {
+    // 获取统计数据
+    const [usersRes, recordsRes] = await Promise.all([
+      usersAPI.getUsers(),
+      recordsAPI.getRecords({ limit: 1000 })
+    ]);
+    
+    const allUsers = usersRes.data;
+    const allRecords = recordsRes.data;
+    
+    // 计算今日日期
+    const today = new Date().toISOString().slice(0, 10);
+    const todayRecords = allRecords.filter(record => record.date === today);
+    
+    // 计算活跃用户（最近7天有记录的用户）
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const activeUsers = new Set(
+      allRecords
+        .filter(record => new Date(record.date) >= sevenDaysAgo)
+        .map(record => record.user_id)
+    ).size;
+    
+    stats.value = {
+      totalUsers: allUsers.length,
+      totalRecords: allRecords.length,
+      todayRecords: todayRecords.length,
+      activeUsers: activeUsers
+    };
+    
+    // 更新图表数据
+    updateCharts(allRecords);
+  } catch (e) {
+    ElMessage.error(e?.response?.data?.message || '加载统计失败');
+  }
+}
 
 async function loadRecords() {
   try {
-    const { data } = await auth.api().get('/admin/records', {
-      params: {
-        userId: filters.value.userId || undefined,
-        type: filters.value.type || undefined,
-        startDate: formatDate(filters.value.startDate),
-        endDate: formatDate(filters.value.endDate),
-      }
+    const response = await recordsAPI.getRecords({
+      userId: filters.value.userId || undefined,
+      type: filters.value.type || undefined,
+      startDate: formatDate(filters.value.startDate),
+      endDate: formatDate(filters.value.endDate),
     });
-    records.value = data;
+    records.value = response.data;
+    
+    // 重新加载统计数据
+    await loadStats();
   } catch (e) {
     ElMessage.error(e?.response?.data?.message || '查询失败');
   }
@@ -81,8 +203,8 @@ async function loadRecords() {
 
 async function loadUsers() {
   try {
-    const { data } = await auth.api().get('/admin/users');
-    users.value = data;
+    const response = await usersAPI.getUsers();
+    users.value = response.data;
   } catch (e) {
     ElMessage.error(e?.response?.data?.message || '加载用户失败');
   }
@@ -99,7 +221,7 @@ function formatDate(d) {
 async function remove(row) {
   try {
     await ElMessageBox.confirm(`确认删除记录 #${row.id} ?`, '提示', { type: 'warning' });
-    await auth.api().delete(`/admin/records/${row.id}`);
+    await recordsAPI.deleteRecord(row.id);
     ElMessage.success('删除成功');
     await loadRecords();
   } catch (e) {
@@ -107,7 +229,109 @@ async function remove(row) {
   }
 }
 
+function updateCharts(records) {
+  // 处理步数数据
+  const stepsData = records
+    .filter(record => record.type === 'steps' && record.steps)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(-30); // 最近30天
+  
+  const sleepData = records
+    .filter(record => record.type === 'sleep' && record.sleep_hours)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(-30); // 最近30天
+  
+  // 更新步数图表
+  if (stepsChartInstance && stepsData.length > 0) {
+    stepsChartInstance.setOption({
+      tooltip: {
+        trigger: 'axis',
+        formatter: '{b}<br/>{a}: {c} 步'
+      },
+      xAxis: {
+        type: 'category',
+        data: stepsData.map(item => item.date)
+      },
+      yAxis: {
+        type: 'value',
+        name: '步数'
+      },
+      series: [{
+        name: '步数',
+        type: 'line',
+        data: stepsData.map(item => item.steps),
+        smooth: true,
+        lineStyle: {
+          color: '#67C23A'
+        },
+        itemStyle: {
+          color: '#67C23A'
+        }
+      }]
+    });
+  }
+  
+  // 更新睡眠图表
+  if (sleepChartInstance && sleepData.length > 0) {
+    sleepChartInstance.setOption({
+      tooltip: {
+        trigger: 'axis',
+        formatter: '{b}<br/>{a}: {c} 小时'
+      },
+      xAxis: {
+        type: 'category',
+        data: sleepData.map(item => item.date)
+      },
+      yAxis: {
+        type: 'value',
+        name: '小时'
+      },
+      series: [{
+        name: '睡眠时长',
+        type: 'line',
+        data: sleepData.map(item => item.sleep_hours),
+        smooth: true,
+        lineStyle: {
+          color: '#409EFF'
+        },
+        itemStyle: {
+          color: '#409EFF'
+        }
+      }]
+    });
+  }
+}
+
+function initCharts() {
+  nextTick(() => {
+    if (stepsChart.value) {
+      stepsChartInstance = echarts.init(stepsChart.value);
+      stepsChartInstance.setOption({
+        title: { text: '步数趋势', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: [] },
+        yAxis: { type: 'value', name: '步数' },
+        series: [{ name: '步数', type: 'line', data: [] }]
+      });
+    }
+    
+    if (sleepChart.value) {
+      sleepChartInstance = echarts.init(sleepChart.value);
+      sleepChartInstance.setOption({
+        title: { text: '睡眠时长趋势', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: [] },
+        yAxis: { type: 'value', name: '小时' },
+        series: [{ name: '睡眠时长', type: 'line', data: [] }]
+      });
+    }
+  });
+}
+
 // 初始化加载
-loadUsers();
-loadRecords();
+onMounted(() => {
+  initCharts();
+  loadUsers();
+  loadRecords();
+});
 </script>

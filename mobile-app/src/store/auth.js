@@ -1,22 +1,18 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
-
-const api = axios.create({ baseURL: import.meta.env.VITE_API_BASE || 'http://localhost:3000/api' });
+import { login as apiLogin, register as apiRegister } from '../api/auth';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: localStorage.getItem('token') || '',
     user: JSON.parse(localStorage.getItem('user') || 'null'),
   }),
-  getters: {
-    isAuthed: (s) => !!s.token,
-  },
+  getters: { isAuthed: (s) => !!s.token },
   actions: {
     async register(username, password) {
-      await api.post('/auth/register', { username, password });
+      await apiRegister(username, password);
     },
     async login(username, password) {
-      const { data } = await api.post('/auth/login', { username, password });
+      const data = await apiLogin(username, password);
       this.token = data.token;
       this.user = data.user;
       localStorage.setItem('token', this.token);
@@ -27,12 +23,6 @@ export const useAuthStore = defineStore('auth', {
       this.user = null;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-    },
-    api() {
-      // attach bearer
-      const client = axios.create({ baseURL: import.meta.env.VITE_API_BASE || 'http://localhost:3000/api' });
-      if (this.token) client.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-      return client;
     }
   }
 });

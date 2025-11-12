@@ -16,7 +16,8 @@ import {
   Cell as VanCell,
   Tabbar as VanTabbar,
   TabbarItem as VanTabbarItem,
-  Toast
+  Toast,
+  Uploader as VanUploader
 } from 'vant';
 
 const app = createApp(App);
@@ -33,5 +34,6 @@ app.component('van-list', VanList);
 app.component('van-cell', VanCell);
 app.component('van-tabbar', VanTabbar);
 app.component('van-tabbar-item', VanTabbarItem);
+app.component('van-uploader', VanUploader);
 app.config.globalProperties.$toast = Toast;
 app.mount('#app');

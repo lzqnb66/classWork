@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
 
-@Entity("records")
-export class Record {
+@Entity("steps_records")
+export class StepsRecord {
     @PrimaryGeneratedColumn()
     id!: number;
 
@@ -13,51 +13,59 @@ export class Record {
     userId!: number;
 
     @Column({
+        type: "int",
+        nullable: false
+    })
+    steps!: number;
+
+    @Column({
         type: "date",
         nullable: false
     })
     date!: Date;
 
     @Column({
-        type: "int",
-        nullable: true,
-        default: 0
+        type: "time",
+        nullable: true
     })
-    steps!: number;
+    time!: string;
 
     @Column({
-        name: "sleep_hours",
+        name: "source",
+        type: "varchar",
+        length: 50,
+        nullable: false,
+        default: "手动记录"
+    })
+    source!: string;
+
+    @Column({
+        name: "notes",
+        type: "varchar",
+        length: 200,
+        nullable: true
+    })
+    notes!: string;
+
+    @Column({
+        name: "calories_burned",
         type: "decimal",
-        precision: 4,
+        precision: 8,
         scale: 2,
         nullable: true,
         default: 0
     })
-    sleepHours!: number;
+    caloriesBurned!: number;
 
     @Column({
-        name: "food_name",
-        type: "varchar",
-        length: 100,
-        nullable: true
-    })
-    foodName!: string;
-
-    @Column({
-        type: "int",
+        name: "distance_km",
+        type: "decimal",
+        precision: 6,
+        scale: 2,
         nullable: true,
         default: 0
     })
-    calories!: number;
-
-    @Column({
-        name: "record_type",
-        type: "varchar",
-        length: 20,
-        nullable: false,
-        default: "daily"
-    })
-    recordType!: string;
+    distanceKm!: number;
 
     @CreateDateColumn({
         name: "created_at"

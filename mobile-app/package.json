@@ -12,12 +12,14 @@
     "axios": "^1.6.8",
     "echarts": "^5.5.0",
     "pinia": "^2.2.4",
-    "vant": "^4.9.8",
+    "vant": "^4.9.21",
     "vue": "^3.4.27",
     "vue-router": "^4.3.2"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
+    "@vitejs/plugin-vue-jsx": "^5.1.1",
+    "unplugin-vue-components": "^30.0.0",
     "vite": "^5.2.0"
   }
 }

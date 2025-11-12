@@ -22,7 +22,7 @@
 <script setup>
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../store/auth';
+import { useAuthStore } from '../store/store.js';
 import { ElMessage } from 'element-plus';
 
 const router = useRouter();
@@ -32,10 +32,9 @@ const form = reactive({ username: '', password: '' });
 async function login() {
   try {
     await auth.login(form.username, form.password);
-    ElMessage.success('登录成功');
-    router.push('/dashboard');
+    // ElMessage.success('登录成功');
+    router.push('/users');
   } catch (e) {
-    ElMessage.error(e?.response?.data?.message || e?.message || '登录失败');
   }
 }
 </script>
