@@ -15,7 +15,7 @@
           readonly
           label="数据类型"
           placeholder="选择类型"
-          @click="showDataTypePicker = true"
+          @click="() => openPicker('dataType')"
         />
         <van-field
           v-model="queryForm.startDate"
@@ -23,7 +23,7 @@
           readonly
           label="开始日期"
           placeholder="选择开始日期"
-          @click="showStartDatePicker = true"
+          @click="() => openPicker('startDate')"
         />
         <van-field
           v-model="queryForm.endDate"
@@ -31,7 +31,7 @@
           readonly
           label="结束日期"
           placeholder="选择结束日期"
-          @click="showEndDatePicker = true"
+          @click="() => openPicker('endDate')"
         />
         <van-field
           v-model="queryForm.timeRange"
@@ -39,7 +39,7 @@
           readonly
           label="时间范围"
           placeholder="选择时间范围"
-          @click="showTimeRangePicker = true"
+          @click="() => openPicker('timeRange')"
         />
         <van-field
           v-model="queryForm.sortOrder"
@@ -47,7 +47,7 @@
           readonly
           label="排序方式"
           placeholder="选择排序"
-          @click="showSortPicker = true"
+          @click="() => openPicker('sort')"
         />
         <van-field
           v-model="queryForm.keyword"
@@ -67,15 +67,6 @@
         >
         <van-button size="large" @click="resetQuery">重置条件</van-button>
       </div>
-        <van-button
-          type="primary"
-          size="large"
-          @click="executeQuery11"
-          :loading="querying"
-          style="display:none;"
-          >执行查询</van-button
-        >
-
       <div v-if="queryResult.length > 0" class="query-results">
         <van-cell-group title="查询结果">
           <van-cell title="记录总数" :value="queryResult.length + ' 条'" />
@@ -143,52 +134,54 @@
       <van-empty v-else-if="queryExecuted" description="暂无查询结果" />
     </div>
 
-    <van-popup v-model:show="showDataTypePicker" round position="bottom">
+    <van-popup v-if="showPopup" v-model:show="showPopup" round position="bottom">
+      <!-- 数据类型选择器 -->
       <van-picker
+        v-show="pickerType === 'dataType'"
         :columns="dataTypeOptions"
         title="选择数据类型"
         @confirm="onDataTypeConfirm"
-        @cancel="showDataTypePicker = false"
+        @cancel="closePopup"
       />
-    </van-popup>
-
-    <van-popup v-model:show="showStartDatePicker" round position="bottom">
+      
+      <!-- 开始日期选择器 -->
       <van-date-picker
+        v-show="pickerType === 'startDate'"
         v-model="startDateValue"
         title="选择开始日期"
         :min-date="minDate"
         :max-date="maxDate"
         @confirm="onStartDateConfirm"
-        @cancel="showStartDatePicker = false"
+        @cancel="closePopup"
       />
-    </van-popup>
-
-    <van-popup v-model:show="showEndDatePicker" round position="bottom">
+      
+      <!-- 结束日期选择器 -->
       <van-date-picker
+        v-show="pickerType === 'endDate'"
         v-model="endDateValue"
         title="选择结束日期"
         :min-date="minDate"
         :max-date="maxDate"
         @confirm="onEndDateConfirm"
-        @cancel="showEndDatePicker = false"
+        @cancel="closePopup"
       />
-    </van-popup>
-
-    <van-popup v-model:show="showTimeRangePicker" round position="bottom">
+      
+      <!-- 时间范围选择器 -->
       <van-time-picker
+        v-show="pickerType === 'timeRange'"
         v-model="timeRangeValue"
         title="选择时间范围"
         @confirm="onTimeRangeConfirm"
-        @cancel="showTimeRangePicker = false"
+        @cancel="closePopup"
       />
-    </van-popup>
-
-    <van-popup v-model:show="showSortPicker" round position="bottom">
+      
+      <!-- 排序方式选择器 -->
       <van-picker
+        v-show="pickerType === 'sort'"
         :columns="sortOptions"
         title="选择排序方式"
         @confirm="onSortConfirm"
-        @cancel="showSortPicker = false"
+        @cancel="closePopup"
       />
     </van-popup>
   </div>
@@ -208,11 +201,8 @@ const queryForm = reactive({
   keyword: "",
 });
 
-const showDataTypePicker = ref(false);
-const showStartDatePicker = ref(false);
-const showEndDatePicker = ref(false);
-const showTimeRangePicker = ref(false);
-const showSortPicker = ref(false);
+const showPopup = ref(false);
+const pickerType = ref(''); // dataType, startDate, endDate, timeRange, sort
 const querying = ref(false);
 const queryExecuted = ref(false);
 const chartRef = ref(null);
@@ -415,10 +405,24 @@ const beforeClose = ({ position, instance }) => {
   }
 };
 
+const openPicker = (type) => {
+  pickerType.value = type;
+  showPopup.value = true;
+  // setTimeout(() => {
+  //   document.querySelector('.van-popup').style.zIndex = Number(document.querySelector('.van-popup').style.zIndex) + 1;
+  //   document.querySelector('.van-popup').style.zIndex = Number(document.querySelector('.van-popup').style.zIndex) - 1;
+  // }, 100)
+};
+
+const closePopup = () => {
+  showPopup.value = false;
+  pickerType.value = '';
+};
+
 const onDataTypeConfirm = (value) => {
   console.log(value);
   queryForm.dataType = value.selectedValues[0] || value;
-  showDataTypePicker.value = false;
+  closePopup();
 };
 
 const onStartDateConfirm = (value) => {
@@ -430,7 +434,7 @@ const onStartDateConfirm = (value) => {
   };
 
   queryForm.startDate = formatDateFromPicker(value);
-  showStartDatePicker.value = false;
+  closePopup();
 };
 
 const onEndDateConfirm = (value) => {
@@ -442,7 +446,7 @@ const onEndDateConfirm = (value) => {
   };
 
   queryForm.endDate = formatDateFromPicker(value);
-  showEndDatePicker.value = false;
+  closePopup();
 };
 
 const onTimeRangeConfirm = (value) => {
@@ -469,12 +473,12 @@ const onTimeRangeConfirm = (value) => {
   }
 
   queryForm.timeRange = `${formattedStart} 至 ${formattedEnd}`;
-  showTimeRangePicker.value = false;
+  closePopup();
 };
 
 const onSortConfirm = (value) => {
   queryForm.sortOrder = value.selectedValues[0] || value;
-  showSortPicker.value = false;
+  closePopup();
 };
 
 </script>

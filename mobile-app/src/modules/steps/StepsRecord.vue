@@ -121,7 +121,7 @@
     </div>
 
     <!-- 数据来源选择器 -->
-    <van-popup v-model:show="showSourcePicker" round position="bottom">
+    <van-popup v-if="showSourcePicker" v-model:show="showSourcePicker" round position="bottom">
       <van-picker
         :columns="sourceOptions"
         @confirm="onSourceConfirm"

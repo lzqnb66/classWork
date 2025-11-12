@@ -155,7 +155,7 @@
     </div>
 
     <!-- 餐次选择器 -->
-    <van-popup v-model:show="showMealTypePicker" round position="bottom">
+    <van-popup v-if="showMealTypePicker" v-model:show="showMealTypePicker" round position="bottom">
       <van-picker
         :columns="mealTypes"
         @confirm="onMealTypeConfirm"

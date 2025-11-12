@@ -141,7 +141,7 @@
       <van-empty v-if="recentRecords.length === 0" description="暂无睡眠记录" />
     </div>
 
-    <van-popup v-model:show="showStartTimePicker" round position="bottom">
+    <van-popup v-if="showStartTimePicker" v-model:show="showStartTimePicker" round position="bottom">
       <van-time-picker
         v-model="startTimeValue"
         @confirm="onStartTimeConfirm"
@@ -149,7 +149,7 @@
       />
     </van-popup>
 
-    <van-popup v-model:show="showEndTimePicker" round position="bottom">
+    <van-popup v-if="showEndTimePicker" v-model:show="showEndTimePicker" round position="bottom">
       <van-time-picker
         v-model="endTimeValue"
         @confirm="onEndTimeConfirm"
@@ -157,7 +157,7 @@
       />
     </van-popup>
 
-    <van-popup v-model:show="showQualityPicker" round position="bottom">
+    <van-popup v-if="showQualityPicker" v-model:show="showQualityPicker" round position="bottom">
       <van-picker
         :columns="qualityOptions"
         @confirm="onQualityConfirm"
